@@ -1,0 +1,8 @@
+{
+  "player": "U",
+  "alien": "Y",
+  "wall": "#",
+  "dot": ".",
+  "space": " ",
+  "use_emoji": false
+}
