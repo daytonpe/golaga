@@ -53,7 +53,7 @@ type Config struct {
 var cfg Config
 
 func loadConfig() error {
-	f, err := os.Open("config_noemoji.json")
+	f, err := os.Open("config.json")
 	if err != nil {
 		return err
 	}
@@ -140,7 +140,8 @@ func printScreen() {
 	moveCursor(len(level)+1, 0)
 	fmt.Printf("Score: %v\tLives: %v\n", score, lives)
 	fmt.Printf("Aliens: %v\n", aliens)
-	fmt.Printf("Count: %v\n", len(aliens))
+	fmt.Printf("Alien count: %v\n", len(aliens))
+	fmt.Printf("Shots: %v\n", len(lasers))
 }
 
 func readInput() (string, error) {
@@ -317,7 +318,7 @@ func main() {
 		// process collisions
 		// TODO set this to if alien makes contact, die
 
-		for i := len(lasers) - 1; i >= 0; i-- {
+		for i := len(aliens) - 1; i >= 0; i-- {
 
 			// handle death of plyer
 			if playerRow == aliens[i].row && player.col == aliens[i].col {
