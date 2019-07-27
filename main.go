@@ -44,7 +44,7 @@ type Config struct {
 	Player   string `json:"player"`
 	Alien    string `json:"alien"`
 	Wall     string `json:"wall"`
-	Dot      string `json:"dot"`
+	Laser    string `json:"laser"`
 	Death    string `json:"death"`
 	Space    string `json:"space"`
 	UseEmoji bool   `json:"use_emoji"`
@@ -86,10 +86,8 @@ func loadLevel() error {
 			switch char {
 			case 'U':
 				player = Player{col}
-			case 'G':
+			case 'Y':
 				aliens = append(aliens, &Alien{row, col})
-			case '.': // laser shots
-				numDots++
 			}
 		}
 	}
@@ -117,10 +115,8 @@ func printScreen() {
 			switch chr {
 			case '#':
 				fmt.Printf("\x1b[44m" + cfg.Wall + "\x1b[0m") // seems this adds color to the wall
-			case 'Y':
-				fmt.Printf(cfg.Alien)
 			case '.':
-				fmt.Printf(cfg.Dot)
+				fmt.Printf(cfg.Laser)
 			default:
 				fmt.Printf(cfg.Space)
 			}
@@ -136,8 +132,15 @@ func printScreen() {
 		fmt.Printf(cfg.Alien)
 	}
 
+	for _, l := range lasers {
+		moveCursor(l.row, l.col)
+		fmt.Printf(cfg.Laser)
+	}
+
 	moveCursor(len(level)+1, 0)
 	fmt.Printf("Score: %v\tLives: %v\n", score, lives)
+	fmt.Printf("Aliens: %v\n", aliens)
+	fmt.Printf("Count: %v\n", len(aliens))
 }
 
 func readInput() (string, error) {
@@ -170,17 +173,28 @@ func readInput() (string, error) {
 
 func fireLaser() {
 	// pass in the column that we want to spawn the lasor
-	// maze[player.row] = maze[player.row][0:player.col] + " " + maze[player.row][player.col+1:]
-	level[playerRow-1] = level[playerRow-1][0:player.col] + "." + level[playerRow-1][player.col+1:]
+	lasers = append(lasers, &Laser{playerRow, player.col})
 	return
 }
 
-func makeMove(oldRow, oldCol int, dir string) (newRow, newCol int) {
+func makeMove(oldRow, oldCol int, action string) (newRow, newCol int) {
 	newRow, newCol = oldRow, oldCol
 
-	switch dir {
+	switch action {
 	case "FIRE":
 		fireLaser()
+
+	case "UP":
+		newRow = newRow - 1
+		if newRow < 0 {
+			newRow = len(level) - 1
+		}
+
+	case "DOWN":
+		newRow = newRow + 1
+		if newRow == len(level)-1 {
+			newRow = 0
+		}
 
 	case "RIGHT":
 		newCol = newCol + 1
@@ -222,9 +236,15 @@ func drawDirection() string {
 }
 
 func moveAliens() {
-	for _, g := range aliens {
+	for _, a := range aliens {
 		dir := drawDirection()
-		g.row, g.col = makeMove(g.row, g.col, dir)
+		a.row, a.col = makeMove(a.row, a.col, dir)
+	}
+}
+
+func moveLasers() {
+	for _, l := range lasers {
+		l.row, l.col = makeMove(l.row, l.col, "UP")
 	}
 }
 
@@ -291,13 +311,30 @@ func main() {
 		default:
 		}
 
+		moveLasers()
 		moveAliens()
 
 		// process collisions
 		// TODO set this to if alien makes contact, die
-		for _, g := range aliens {
-			if playerRow == g.row && player.col == g.col {
+
+		for i := len(lasers) - 1; i >= 0; i-- {
+
+			// handle death of plyer
+			if playerRow == aliens[i].row && player.col == aliens[i].col {
 				lives = 0
+			}
+
+			// handle hits
+			for j := len(lasers) - 1; j >= 0; j-- {
+				if lasers[j].row == aliens[i].row && lasers[j].col == aliens[i].col {
+					score++ // score a hit
+					level[aliens[i].row] = level[aliens[i].row][0:aliens[i].col] + " " + level[aliens[i].row][aliens[i].col+1:]
+
+					aliens[i] = aliens[len(aliens)-1]
+					aliens[len(aliens)-1] = &Alien{0, 0}
+					aliens = aliens[:len(aliens)-1]
+
+				}
 			}
 		}
 
@@ -305,7 +342,7 @@ func main() {
 		printScreen()
 
 		// check game over
-		if numDots == 0 || lives == 0 {
+		if len(aliens) == 0 || lives == -1 {
 			if lives == 0 {
 				moveCursor(playerRow, player.col)
 				fmt.Printf(cfg.Death)

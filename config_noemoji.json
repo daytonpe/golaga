@@ -2,7 +2,7 @@
   "player": "U",
   "alien": "Y",
   "wall": "#",
-  "dot": ".",
+  "laser": ".",
   "space": " ",
   "use_emoji": false
 }
