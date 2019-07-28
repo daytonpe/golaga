@@ -33,7 +33,7 @@ type Laser struct {
 
 var aliens []*Alien
 var lasers []*Laser
-var playerRow = 30 // denotes the row in which the player slides
+var playerRow = 16 // denotes the row in which the player slides
 var level []string
 var score int
 var numDots int
@@ -140,7 +140,11 @@ func printScreen() {
 	moveCursor(len(level)+1, 0)
 	fmt.Printf("Score: %v\tLives: %v\n", score, lives)
 	fmt.Printf("Aliens: %v\n", aliens)
-	fmt.Printf("Alien count: %v\n", len(aliens))
+	for index := 0; index < len(aliens); index++ {
+		fmt.Printf("Alien %v: %v\n", index, *aliens[index])
+
+	}
+
 	fmt.Printf("Shots: %v\n", len(lasers))
 }
 
@@ -313,10 +317,13 @@ func main() {
 		}
 
 		moveLasers()
-		moveAliens()
+		// moveAliens()
 
 		// process collisions
 		// TODO set this to if alien makes contact, die
+
+		var remainingAliens []*Alien
+		// copy(aliens, remainingAliens)
 
 		for i := len(aliens) - 1; i >= 0; i-- {
 
@@ -325,19 +332,32 @@ func main() {
 				lives = 0
 			}
 
-			// handle hits
+			hit := false
+
+			// handle laser/alien collisions
 			for j := len(lasers) - 1; j >= 0; j-- {
+
+				// if the laser overlaps the alien, it's a kill
 				if lasers[j].row == aliens[i].row && lasers[j].col == aliens[i].col {
-					score++ // score a hit
+
+					// score a hit
+					score++
+
+					// remove the alien from the board
 					level[aliens[i].row] = level[aliens[i].row][0:aliens[i].col] + " " + level[aliens[i].row][aliens[i].col+1:]
 
-					aliens[i] = aliens[len(aliens)-1]
-					aliens[len(aliens)-1] = &Alien{0, 0}
-					aliens = aliens[:len(aliens)-1]
-
+					// track hits for refreshing alien fleet
+					hit = true
 				}
+
+			}
+			if !hit {
+				remainingAliens = append(remainingAliens, aliens[i])
 			}
 		}
+
+		// refresh alien fleet
+		aliens = remainingAliens
 
 		// update screen
 		printScreen()
