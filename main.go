@@ -250,10 +250,10 @@ func moveLasers() {
 
 	for j := len(lasers) - 1; j >= 0; j-- {
 
-		// TODO: check if laser is at the top.
-
+		// check if the laser is at the top
 		top := false
 
+		// look through the lasers to see if any are at top row (row 1)
 		if lasers[j].row == 1 {
 			// remove the laser from the board
 			level[lasers[j].row] = level[lasers[j].row][0:lasers[j].col] + " " + level[lasers[j].row][lasers[j].col+1:]
@@ -342,7 +342,7 @@ func main() {
 		// TODO set this to if alien makes contact, die
 
 		var remainingAliens []*Alien
-		// copy(aliens, remainingAliens)
+		// var remainingLasers []*Laser
 
 		for i := len(aliens) - 1; i >= 0; i-- {
 
@@ -367,6 +367,11 @@ func main() {
 
 					// track hits for refreshing alien fleet
 					hit = true
+
+					// remove the laser in the collision from the board
+					copy(lasers[j:], lasers[j+1:])
+					lasers[len(lasers)-1] = &Laser{col: 0, row: 0}
+					lasers = lasers[:len(lasers)-1]
 				}
 
 			}
