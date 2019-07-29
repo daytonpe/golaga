@@ -33,7 +33,7 @@ type Laser struct {
 
 var aliens []*Alien
 var lasers []*Laser
-var playerRow = 30 // denotes the row in which the player slides
+var playerRow = 33 // denotes the row in which the player slides
 var level []string
 var score int
 var numDots int
@@ -238,11 +238,47 @@ func drawDirection() string {
 	return move[dir]
 }
 
-func moveAliens() {
+// return the leftmost column of the alien fleet
+func fleetLeft() int {
+	var col = 1000
 	for _, a := range aliens {
-		dir := drawDirection()
-		a.row, a.col = makeMove(a.row, a.col, dir)
+		if a.col < col {
+			col = a.col
+		}
 	}
+	return col
+}
+
+// return the rightmost column of the alien fleet
+func fleetRight() int {
+	var col = -1000
+	for _, a := range aliens {
+		if a.col > col {
+			col = a.col
+		}
+	}
+	return col
+}
+
+func moveAliens() {
+	// move down (last move moved aliens all the way left)
+
+	if fleetLeft() == 4 {
+		// move right ()
+		for _, a := range aliens {
+			a.row, a.col = makeMove(a.row, a.col, "RIGHT")
+		}
+	} else if fleetRight() == 28 {
+		// move left ()
+		for _, a := range aliens {
+			a.row, a.col = makeMove(a.row, a.col, "LEFT")
+		}
+	} else {
+		for _, a := range aliens {
+			a.row, a.col = makeMove(a.row, a.col, "LEFT")
+		}
+	}
+
 }
 
 func moveLasers() {
@@ -254,7 +290,7 @@ func moveLasers() {
 		top := false
 
 		// look through the lasers to see if any are at top row (row 1)
-		if lasers[j].row == 1 {
+		if lasers[j].row == 4 {
 			// remove the laser from the board
 			level[lasers[j].row] = level[lasers[j].row][0:lasers[j].col] + " " + level[lasers[j].row][lasers[j].col+1:]
 
@@ -323,6 +359,8 @@ func main() {
 		}
 	}(input)
 
+	counter := 0
+
 	// game loop
 	for {
 		// process movement
@@ -336,13 +374,14 @@ func main() {
 		}
 
 		moveLasers()
-		// moveAliens()
+		if counter%10 == 1 {
+			moveAliens()
+		}
 
 		// process collisions
 		// TODO set this to if alien makes contact, die
 
 		var remainingAliens []*Alien
-		// var remainingLasers []*Laser
 
 		for i := len(aliens) - 1; i >= 0; i-- {
 
@@ -398,5 +437,6 @@ func main() {
 
 		// repeat
 		time.Sleep(50 * time.Millisecond)
+		counter++
 	}
 }
