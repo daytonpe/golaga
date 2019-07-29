@@ -33,7 +33,7 @@ type Laser struct {
 
 var aliens []*Alien
 var lasers []*Laser
-var playerRow = 16 // denotes the row in which the player slides
+var playerRow = 30 // denotes the row in which the player slides
 var level []string
 var score int
 var numDots int
@@ -140,12 +140,10 @@ func printScreen() {
 	moveCursor(len(level)+1, 0)
 	fmt.Printf("Score: %v\tLives: %v\n", score, lives)
 	fmt.Printf("Aliens: %v\n", aliens)
-	for index := 0; index < len(aliens); index++ {
-		fmt.Printf("Alien %v: %v\n", index, *aliens[index])
-
-	}
-
 	fmt.Printf("Shots: %v\n", len(lasers))
+	for i := 0; i < len(lasers); i++ {
+		fmt.Println("Laser", i, *lasers[i])
+	}
 }
 
 func readInput() (string, error) {
@@ -248,9 +246,30 @@ func moveAliens() {
 }
 
 func moveLasers() {
-	for _, l := range lasers {
-		l.row, l.col = makeMove(l.row, l.col, "UP")
+	var remainingLasers []*Laser
+
+	for j := len(lasers) - 1; j >= 0; j-- {
+
+		// TODO: check if laser is at the top.
+
+		top := false
+
+		if lasers[j].row == 1 {
+			// remove the laser from the board
+			level[lasers[j].row] = level[lasers[j].row][0:lasers[j].col] + " " + level[lasers[j].row][lasers[j].col+1:]
+
+			top = true
+		} else {
+			lasers[j].row, lasers[j].col = makeMove(lasers[j].row, lasers[j].col, "UP")
+		}
+
+		if !top {
+			remainingLasers = append(remainingLasers, lasers[j])
+		}
 	}
+
+	// refresh lasers on level
+	lasers = remainingLasers
 }
 
 func init() {
@@ -373,6 +392,6 @@ func main() {
 		}
 
 		// repeat
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(50 * time.Millisecond)
 	}
 }
