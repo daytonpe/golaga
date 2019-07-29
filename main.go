@@ -38,6 +38,7 @@ var level []string
 var score int
 var numDots int
 var lives = 1
+var lastAlienMove = "DOWN"
 
 // Config holds the emoji configuration
 type Config struct {
@@ -263,22 +264,38 @@ func fleetRight() int {
 func moveAliens() {
 	// move down (last move moved aliens all the way left)
 
-	if fleetLeft() == 4 {
-		// move right ()
+	if lastAlienMove == "DOWN" {
+		// if we found an edge in the LAST turn, move toward the opposite edge
+		if fleetLeft() == 4 {
+			for _, a := range aliens {
+				a.row, a.col = makeMove(a.row, a.col, "RIGHT")
+			}
+			lastAlienMove = "RIGHT"
+		} else {
+			for _, a := range aliens {
+				a.row, a.col = makeMove(a.row, a.col, "LEFT")
+			}
+			lastAlienMove = "LEFT"
+		}
+	} else if fleetLeft() == 4 || fleetRight() == 29 {
+		// if we've found an edge move down
+		for _, a := range aliens {
+			a.row, a.col = makeMove(a.row, a.col, "DOWN")
+		}
+		lastAlienMove = "DOWN"
+	} else if lastAlienMove == "LEFT" {
+		// if the last alien move was left, keep moving left
+		for _, a := range aliens {
+			a.row, a.col = makeMove(a.row, a.col, "LEFT")
+		}
+		lastAlienMove = "LEFT"
+	} else if lastAlienMove == "RIGHT" {
+		// if the last alien move was right, keep moving right
 		for _, a := range aliens {
 			a.row, a.col = makeMove(a.row, a.col, "RIGHT")
 		}
-	} else if fleetRight() == 28 {
-		// move left ()
-		for _, a := range aliens {
-			a.row, a.col = makeMove(a.row, a.col, "LEFT")
-		}
-	} else {
-		for _, a := range aliens {
-			a.row, a.col = makeMove(a.row, a.col, "LEFT")
-		}
+		lastAlienMove = "RIGHT"
 	}
-
 }
 
 func moveLasers() {
@@ -373,6 +390,7 @@ func main() {
 		default:
 		}
 
+		//move the non-user board elements
 		moveLasers()
 		if counter%10 == 1 {
 			moveAliens()
