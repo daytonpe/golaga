@@ -454,7 +454,7 @@ func main() {
 		}
 
 		// repeat
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(40 * time.Millisecond)
 		counter++
 	}
 }
